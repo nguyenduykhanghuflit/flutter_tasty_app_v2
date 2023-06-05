@@ -21,61 +21,58 @@ class DetailPost extends StatefulWidget {
 
 class _DetailPostState extends State<DetailPost> {
   late final String postId;
-  Map<String, dynamic> post={};
-  List<dynamic> comments=[];
-  String textComment="";
-  TextEditingController commentController=TextEditingController();
+  Map<String, dynamic> post = {};
+  List<dynamic> comments = [];
+  String textComment = "";
+  TextEditingController commentController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   Future<void> fetchData(String postId) async {
     try {
-      Map<String, dynamic> data =await ApiServices().getPostById(postId);
-      print(data);
+      Map<String, dynamic> data = await ApiServices().getPostById(postId);
       setState(() {
-        post=data["response"];
+        post = data["response"];
       });
     } catch (e) {
-      print('ở đây $e' );
-    }
-  }
-  // Hàm gọi API để lấy data
-  Future<void> fetchComment() async {
-    try {
-      Map<String, dynamic> data =await ApiServices().fetchComment(postId);
-      print(data["response"]);
-      setState(() {
-        comments=data["response"];
-      });
-    } catch (e) {
-      print('ở đây $e' );
+      print('ở đây $e');
     }
   }
 
-  Future<void> handleComment(String postId,String content) async{
+  // Hàm gọi API để lấy data
+  Future<void> fetchComment() async {
+    try {
+      Map<String, dynamic> data = await ApiServices().fetchComment(postId);
+      setState(() {
+        comments = data["response"];
+      });
+    } catch (e) {
+      print('ở đây $e');
+    }
+  }
+
+  Future<void> handleComment(String postId, String content) async {
     final progressDialog = ProgressDialog(context);
-    progressDialog.style(message: '....',backgroundColor: Colors.white);
+    progressDialog.style(message: 'Đang bình luận', backgroundColor: Colors.white);
     progressDialog.show();
-    APIResponse response=await ApiServices().commentPost(postId,content);
-    if(response.code!<0)
-    {
+    APIResponse response = await ApiServices().commentPost(postId, content);
+    if (response.code! < 0) {
       // ignore: use_build_context_synchronously
       progressDialog.hide();
+      // ignore: use_build_context_synchronously
       showNotify(context, "Đã bình luận", false);
       setState(() {
-        textComment="";
-        commentController.text="";
+        textComment = "";
+        commentController.text = "";
       });
       fetchComment();
-    }
-    else if(response.code==401){
+    } else if (response.code == 401) {
       progressDialog.hide();
       Functions.reLogin();
-    }
-    else{
+    } else {
       progressDialog.hide();
       // ignore: use_build_context_synchronously
       showNotify(context, response.message!, true);
     }
   }
-
 
   void showNotify(BuildContext context, String message, bool isErr) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -86,6 +83,7 @@ class _DetailPostState extends State<DetailPost> {
       ),
     );
   }
+
   @override
   void initState() {
     super.initState();
@@ -93,169 +91,172 @@ class _DetailPostState extends State<DetailPost> {
     fetchData(postId);
     fetchComment();
   }
+
   @override
   Widget build(BuildContext context) {
     if (post.isNotEmpty) {
       return Scaffold(
         appBar: postDetailAppBar(context),
         resizeToAvoidBottomInset: true,
-        body: SingleChildScrollView(
-          child:Column(
-            children: [
-              //slider
-              ImageSlideshow(
-                indicatorColor: Colors.blue,
-                autoPlayInterval: 3000,
-                height: 500,
-                isLoop: true,
-                children: post["PostMedia"]
-                    .map((item) => FadeInImage(
-                  placeholder:
-                  const AssetImage('assets/img/noimg.png'),
-                  image: NetworkImage(item["url"]),
-                ))
-                    .cast<Widget>()
-                    .toList(),
-              ),
-              const SizedBox(
-                height: 8,
-              ),
-              //đánh giá số sao
-              Row(
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                  child: Column(
                 children: [
+                  //slider
+                  ImageSlideshow(
+                    indicatorColor: Colors.blue,
+                    autoPlayInterval: 3000,
+                    height: 500,
+                    isLoop: true,
+                    children: post["PostMedia"]
+                        .map((item) => FadeInImage(
+                              placeholder: const AssetImage('assets/img/noimg.png'),
+                              image: NetworkImage(item["url"]),
+                            ))
+                        .cast<Widget>()
+                        .toList(),
+                  ),
                   const SizedBox(
-                    width: 8,
+                    height: 8,
                   ),
-                  const  Icon(
-                    Icons.star,
-                    color: Colors.yellow,
-                    size: 35,
+                  //đánh giá số sao
+                  Row(
+                    children: [
+                      const SizedBox(
+                        width: 8,
+                      ),
+                      const Icon(
+                        Icons.star,
+                        color: Colors.yellow,
+                        size: 35,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        "${post['star']}/5",
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                    ],
                   ),
-                  const  SizedBox(width: 5),
-                  Text(
-                    "${post['star']}/5",
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
+                  //title
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      post['title'].toString().toUpperCase(),
+                      style:const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                          color: Color(0xFF212529)),
+                      textAlign: TextAlign.left,
                     ),
-                    textAlign: TextAlign.left,
+                  ),
+                  const SizedBox(
+                    height: 6,
+                  ),
+                  //content
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      post['content'],
+                      style: const TextStyle(
+                          fontWeight: FontWeight.normal,
+                          fontSize: 20,
+                          color: Color(0xFF212529)),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  //place box
+                  placeBox(post["PlacePost"]),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                   //comment box
+                  if (comments.isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(left: 15.0),
+                          child: Text(
+                            "Tất cả bình luận của bài viết",
+                            style: TextStyle(
+                                fontWeight: FontWeight.normal,
+                                fontSize: 20,
+                                color: Color(0xFF212529)),
+                          ),
+                        ),
+                        listComment(comments),
+                      ],
+                    )
+                  else
+                    commentText("Chưa có bình luận nào cho bài viết"),
+
+                  const SizedBox(
+                    height: 20,
                   ),
                 ],
-              ),
-              //title
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  post['title'].toString().toUpperCase(),
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
-                      color: Color(0xFF212529)),
-                    textAlign: TextAlign.left,
-
-
-                ),
-              ),
-              const  SizedBox(
-                height: 6,
-              ),
-              //content
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  post['content'],
-                  style:const TextStyle(
-                      fontWeight: FontWeight.normal,
-                      fontSize: 20,
-                      color: Color(0xFF212529)),
-                ),
-              ),
-             const SizedBox(
-                height: 10,
-              ),
-              //place box
-              placeBox(post["PlacePost"]),
-              const SizedBox(
-                height: 10,
-              ),
-              //comment box
-              if(comments.isNotEmpty)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              )),
+            ),
+            //xử lý bình luận
+            SizedBox(
+              height: 60,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10.0),
+                    color: Colors.grey[200],
+                  ),
+                  child: Row(
                     children: [
-                   const  Padding(
-                       padding:  EdgeInsets.only(left:15.0),
-                       child:  Text("Tất cả bình luận của bài viết",style: TextStyle(
-                            fontWeight: FontWeight.normal,
-                            fontSize: 20,
-                            color: Color(0xFF212529)),),
-                     ),
-                      listComment(comments),
-
-                    ],
-                  )
-
-              else
-                commentText("Chưa có bình luận nào cho bài viết"),
-
-              const SizedBox(
-                height: 20,
-              ),
-
-            ],
-          )
-
-        ),
-        bottomNavigationBar: BottomAppBar(
-          padding: const EdgeInsets.all(20),
-          child: Container(
-            height: 60,
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.0),
-                  color: Colors.grey[200],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: commentController,
-                        decoration: InputDecoration(
-                          hintText: "Viết Bình luận.",
-                          border: InputBorder.none,
+                      Expanded(
+                        child: TextField(
+                          controller: commentController,
+                          focusNode: _focusNode,
+                          decoration: const InputDecoration(
+                            hintText: "Viết Bình luận.",
+                            border: InputBorder.none,
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              textComment = value;
+                            });
+                          },
                         ),
-                        onChanged: (value){
-                          setState(() {
-                            textComment=value;
-                          });
+                      ),
+                      IconButton(
+                        icon:const Icon(Icons.send),
+                        onPressed: () {
+                          if (textComment.isNotEmpty) {
+                            _focusNode.unfocus();
+                            handleComment(postId, textComment);
+
+                          }
                         },
                       ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.send),
-                      onPressed: () {
-                        if(textComment.isNotEmpty){
-                          handleComment(postId, textComment);
-                          //call api comment và load lại comment
-                        }
-                      },
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       );
     } else {
+      //add skeleton later
       return Container(
         color: Colors.white,
         child: Stack(
           children: [
-            Center(
+           const Center(
               child: CircularProgressIndicator(),
             ),
             Container(
@@ -267,10 +268,10 @@ class _DetailPostState extends State<DetailPost> {
     }
   }
 
-
   AppBar postDetailAppBar(context) {
     final parsedDate = DateTime.parse(post["createdAt"]);
-    String dateString = "${parsedDate.day}/${parsedDate.month}/${parsedDate.year}";
+    String dateString =
+        "${parsedDate.day}/${parsedDate.month}/${parsedDate.year}";
     String timeString = "vào lúc ${parsedDate.hour}:${parsedDate.minute}";
     String formattedString = "$dateString $timeString";
     return AppBar(
@@ -293,66 +294,67 @@ class _DetailPostState extends State<DetailPost> {
           ),
           Expanded(
             child: GestureDetector(
-              onTap: () {
-              },
-              child: Container(
-                child: Row(
-                  children: [
-                    const SizedBox(width: 8.0),
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.yellow,
-                          width: 1.0,
-                        ),
-                      ),
-                      child: CircleAvatar(
-                        backgroundImage: NetworkImage(post["UserPost"]["avatar"]),
-                        backgroundColor: Colors.white, // Thêm màu nền trắng để đường viền hiển thị rõ
-                        radius: 25.0, // Thay đổi độ lớn của CircleAvatar
+              onTap: () {},
+              child: Row(
+                children: [
+                  const SizedBox(width: 8.0),
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.yellow,
+                        width: 1.0,
                       ),
                     ),
-                    const SizedBox(width: 8.0),
-                    Expanded(child:
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                            post["UserPost"]["fullname"],
+                    child: CircleAvatar(
+                      backgroundImage:
+                          NetworkImage(post["UserPost"]["avatar"]),
+                      backgroundColor: Colors
+                          .white, // Thêm màu nền trắng để đường viền hiển thị rõ
+                      radius: 25.0, // Thay đổi độ lớn của CircleAvatar
+                    ),
+                  ),
+                  const SizedBox(width: 8.0),
+                  Expanded(
+                      child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(post["UserPost"]["fullname"],
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
-                          style: TextStyle(color: Colors.black,fontSize: 18)
-                        ),
-                        const SizedBox(height: 5.0),
-                        Text(
-                            formattedString,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            style: TextStyle( color: Color(0xFF646a6c),fontSize: 13))
-                      ],
-                    )
-
-                    )
-
-                  ],
-                ),
+                          style:
+                            const  TextStyle(color: Colors.black, fontSize: 18)),
+                      const SizedBox(height: 5.0),
+                      Text(formattedString,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: const TextStyle(
+                              color: Color(0xFF646a6c), fontSize: 13))
+                    ],
+                  ))
+                ],
               ),
             ),
           ),
         ],
-      ),);
+      ),
+    );
   }
 
-  Column listComment(comments){
+  Column listComment(comments) {
     return Column(
-      children: comments.map((item){
-        String urlImg=item["UserComment"]["avatar"];
-        String fullName=item["UserComment"]["fullname"];
-        String content=item["content"];
-        return Padding(padding: EdgeInsets.all(10),
-        child: buildCommentWidget(urlImg,fullName,content),);
-      }).cast<Widget>().toList(),
+      children: comments
+          .map((item) {
+            String urlImg = item["UserComment"]["avatar"];
+            String fullName = item["UserComment"]["fullname"];
+            String content = item["content"];
+            return Padding(
+              padding:const EdgeInsets.all(10),
+              child: buildCommentWidget(urlImg, fullName, content),
+            );
+          })
+          .cast<Widget>()
+          .toList(),
     );
   }
 
@@ -371,37 +373,32 @@ class _DetailPostState extends State<DetailPost> {
           children: [
             Text(
               username,
-              style: TextStyle(
+              style:const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
                 color: Colors.black,
-
               ),
             ),
             Text(
               comment,
-              style: TextStyle(
+              style:const TextStyle(
                 fontWeight: FontWeight.normal,
                 fontSize: 15,
-
-
               ),
             ),
           ],
         ),
         enabled: false,
         dense: true,
-        contentPadding: EdgeInsets.all(0),
+        contentPadding:const EdgeInsets.all(0),
         horizontalTitleGap: 8,
         minVerticalPadding: 0,
-
-
       ),
     );
   }
 
-  Container commentText(String text){
-    return   Container(
+  Container commentText(String text) {
+    return Container(
       height: 60,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10.0),
@@ -409,14 +406,18 @@ class _DetailPostState extends State<DetailPost> {
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Text(text,style: const TextStyle(
-            fontWeight: FontWeight.normal,
-            fontSize: 20,
-            color: Color(0xFF212529)),),
+        child: Text(
+          text,
+          style: const TextStyle(
+              fontWeight: FontWeight.normal,
+              fontSize: 20,
+              color: Color(0xFF212529)),
+        ),
       ),
     );
-}
-Widget placeBox(place) {
+  }
+
+  Widget placeBox(place) {
     return Stack(
       children: [
         InkWell(
@@ -458,7 +459,7 @@ Widget placeBox(place) {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children:  [
+                  children: [
                     SizedBox(
                       width: 220,
                       child: Text(
@@ -477,7 +478,7 @@ Widget placeBox(place) {
                     SizedBox(
                         width: 220,
                         child: Text(
-                          // ignore: invalid_use_of_protected_member
+                            // ignore: invalid_use_of_protected_member
                             "${place["fullAddress"]}",
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
@@ -492,11 +493,7 @@ Widget placeBox(place) {
             ),
           ),
         ),
-
       ],
     );
   }
-
-
-
 }

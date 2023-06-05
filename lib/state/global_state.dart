@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class GlobalController extends GetxController {
 
@@ -27,4 +28,15 @@ class GlobalController extends GetxController {
     postListState={};
   }
 
+
+ var latLngObs=const LatLng(0, 0).obs;
+  var addressObs=''.obs;
+  void setAddressInfo( {dynamic latLng, required dynamic address} ){
+    latLngObs.value=latLng;
+    addressObs.value=address;
+  }
+  void clearAddressInfo(LatLng latLng,String address ){
+    latLng=const LatLng(0, 0);
+    address='';
+  }
 }

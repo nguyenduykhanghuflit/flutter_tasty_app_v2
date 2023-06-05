@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.tasty_app_v2">
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
    <application
         android:label="tasty_app_v2"
         android:name="${applicationName}"
@@ -21,6 +24,7 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -28,8 +32,11 @@
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+              <meta-data android:name="com.google.android.geo.API_KEY"
+               android:value="AIzaSyBvYo7tmhezL5_A9yzyx2eT0D3si5ouTh8"/>
     </application>
 </manifest>

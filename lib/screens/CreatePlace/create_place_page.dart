@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:multi_select_flutter/bottom_sheet/multi_select_bottom_sheet_field.dart';
@@ -11,6 +12,7 @@ import 'package:multi_select_flutter/util/multi_select_item.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
 import 'package:tasty_app_v2/models/PlaceDTO.dart';
+import 'package:tasty_app_v2/screens/GoogleMap/google_map.dart';
 import 'package:time_range/time_range.dart';
 import '../../helpers/functions.dart';
 import '../../helpers/shared.dart';
@@ -37,13 +39,13 @@ class _CreatePlaceState extends State<CreatePlace> {
   final _phoneLength = 10;
   final ImagePicker imgPicker = ImagePicker();
   List<XFile> imageFiles = [];
-  final CurrencyTextInputFormatter _minPirceFormatter =
+  final CurrencyTextInputFormatter _minPriceFormatter =
       CurrencyTextInputFormatter(
     locale: 'vi_VN',
     decimalDigits: 0,
     symbol: 'VND ',
   );
-  final CurrencyTextInputFormatter _maxPirceFormatter =
+  final CurrencyTextInputFormatter _maxPriceFormatter =
       CurrencyTextInputFormatter(
     locale: 'vi_VN',
     decimalDigits: 0,
@@ -58,17 +60,18 @@ class _CreatePlaceState extends State<CreatePlace> {
     {'snack': 'Ăn vặt'},
     {'evening': 'Ăn tối'},
   ].map((data) => MultiSelectItem<dynamic>(data, data.values.first)).toList();
-  final _multiSelectKey = GlobalKey<FormFieldState>();
+  final _multiSelectKey = GlobalKey<FormFieldState<dynamic>>();
   List<dynamic> _selectedCategory = [];
-  dynamic rangeTime = [];
+  TimeRangeResult? rangeTime;
   Future<void> handleNavigate() async {
     String? token = await ApiServices().getToken();
     if (token == null || token == "") Get.to(const LoginPage());
   }
-
+LatLng latLngInit=const LatLng(0, 0);
   @override
   void initState() {
     super.initState();
+
     handleNavigate();
   }
 
@@ -88,75 +91,50 @@ class _CreatePlaceState extends State<CreatePlace> {
   }
 
   void _submitForm(BuildContext context) async {
-    final GlobalController ctrl = Get.find();
     // handle form submit
     final placeName = _placeNameController.text;
     final description = _descriptionController.text;
     final fullAddress = _addressController.text;
     final phone = _phoneController.text;
-    final lat = 'hardcode';
-    final lng = 'hardcode';
-    final priceFrom = _minPirceFormatter.getUnformattedValue();
-    final priceTo = _maxPirceFormatter.getUnformattedValue();
-    // final timeFrom = _maxPirceFormatter.getUnformattedValue();
-    // final timeTo = _maxPirceFormatter.getUnformattedValue();
+    double lat =latLngInit.latitude;
+    double lng = latLngInit.longitude;
+    final priceFrom = _minPriceFormatter.getUnformattedValue();
+    final priceTo = _maxPriceFormatter.getUnformattedValue();
 
-    PlaceDTO placeDTO = PlaceDTO(
+
+     PlaceDTO placeDTO = PlaceDTO(
         imageFiles,
         placeName,
         description,
         fullAddress,
-        lat,
-        lng,
+        lat.toString(),
+        lng.toString(),
         priceFrom,
         priceTo,
         phone,
-        rangeTime,
-        rangeTime,
+        rangeTime?.start.format(context),
+        rangeTime?.end.format(context),
         _selectedCategory);
+      final progressDialog = ProgressDialog(context);
+      progressDialog.style(
+          message: 'Đang tạo địa điểm ...', backgroundColor: Colors.white);
+      progressDialog.show();
+      APIResponse response = await ApiServices().createPlace(placeDTO);
+      if (response.code! < 0) {
+        progressDialog.hide();
+        // ignore: use_build_context_synchronously
+        showNotify(context, "Đã tạo thành công", false);
+        Get.back(result: {"address": 'aa', "latLng": 'aa'});
+      } else if (response.code == 401) {
+        progressDialog.hide();
+        Functions.reLogin();
+      } else {
+        progressDialog.hide();
+        // ignore: use_build_context_synchronously
+        showNotify(context, response.message!, true);
 
-    print(placeDTO.toString());
-
-    //imageFiles
-    // ignore: invalid_use_of_protected_member
-    // var placeId = ctrl.placeSelected.value["placeId"];
-    // if (title.isNotEmpty &&
-    //     content.isNotEmpty &&
-    //     rating > 0 &&
-    //     imageFiles.isNotEmpty &&
-    //     placeId != null) {
-    //   final progressDialog = ProgressDialog(context);
-    //   progressDialog.style(
-    //       message: 'Đang đăng bài ...', backgroundColor: Colors.white);
-    //   progressDialog.show();
-    //   PostDTO postDTO = PostDTO(imageFiles, title, content, rating, placeId);
-    //   APIResponse response = await ApiServices().createPost(postDTO);
-    //   if (response.code! < 0) {
-    //     // ignore: use_build_context_synchronously
-    //     progressDialog.hide();
-    //     setState(() {
-    //       _titleController.text = '';
-    //       _contentController.text = '';
-    //       _rating = 0;
-    //       ctrl.clearPlace();
-    //       imageFiles = [];
-    //     });
-    //     // ignore: use_build_context_synchronously
-    //     showNotify(context, "Đã tạo thành công bài viết", false);
-    //   } else if (response.code == 401) {
-    //     progressDialog.hide();
-    //     Functions.reLogin();
-    //   } else {
-    //     progressDialog.hide();
-    //     // ignore: use_build_context_synchronously
-    //     showNotify(context, response.message!, true);
-    //   }
-    // } else {
-    //   // ignore: use_build_context_synchronously
-
-    //   showNotify(context, "Bạn cần nhập đủ thông tin", true);
-    // }
-  }
+      }
+    }
 
   openImages() async {
     try {
@@ -172,9 +150,21 @@ class _CreatePlaceState extends State<CreatePlace> {
       print("error while picking file.");
     }
   }
-
+  void _handleNavigateToSelectAddress() async {
+    Map<String, dynamic>? result = await Get.to(const GoogleMapScreen());
+    if (result != null) {
+      String address = result['address'];
+      LatLng latLng = result['latLng'];
+      setState(() {
+        latLngInit=latLng;
+      });
+      _addressController.text=address;
+    }
+  }
   @override
   Widget build(BuildContext context) {
+    var addressInfo=globalController.addressObs;
+     if(addressInfo.value!='') _addressController.text=addressInfo.value;
     return Scaffold(
       appBar: AppBar(
         leadingWidth: 0,
@@ -242,56 +232,60 @@ class _CreatePlaceState extends State<CreatePlace> {
           ),
           const SizedBox(height: 16),
           //form data
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  //title
-                  TextField(
-                    controller: _placeNameController,
-                    maxLength: 255,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                      // màu nền
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                      hintText: 'Tên địa điểm bạn muốn tạo',
-                      // hiển thị hint text
-                      hintStyle: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[400],
-                      ),
+          SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                //title
+                TextField(
+                  controller: _placeNameController,
+                  maxLength: 255,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    // màu nền
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Tên địa điểm bạn muốn tạo',
+                    // hiển thị hint text
+                    hintStyle: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[400],
                     ),
                   ),
+                ),
 
-                  //_descriptionController
-                  TextField(
-                    controller: _descriptionController,
-                    maxLength: 255,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                      // màu nền
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                      hintText: 'Mô tả về địa điểm ví dụ: Ẩm thực, ăn uống...',
-                      // hiển thị hint text
-                      hintStyle: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[400],
-                      ),
+                //_descriptionController
+                TextField(
+                  controller: _descriptionController,
+                  maxLength: 255,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    // màu nền
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Mô tả về địa điểm ví dụ: Ẩm thực, ăn uống...',
+                    // hiển thị hint text
+                    hintStyle: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[400],
                     ),
                   ),
-                  //địa chỉ
-                  TextField(
+                ),
+                //địa chỉ
+                GestureDetector(
+                  onTap: () {
+                    _handleNavigateToSelectAddress();
+                  },
+                  child: TextField(
+                    enabled: false,
                     controller: _addressController,
                     maxLength: 255,
                     decoration: InputDecoration(
@@ -311,171 +305,170 @@ class _CreatePlaceState extends State<CreatePlace> {
                       ),
                     ),
                   ),
+                ),
 
-                  //phone
-                  TextField(
-                    controller: _phoneController,
-                    maxLength: _phoneLength,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                      // màu nền
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                      hintText: 'Nhập số điện thoại',
-                      // hiển thị hint text
-                      hintStyle: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                  ),
-
-                  //giá thấp nhất
-                  TextField(
-                    inputFormatters: <TextInputFormatter>[_minPirceFormatter],
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                      // màu nền
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                      hintText: 'Giá thấp nhất',
-                      // hiển thị hint text
-                      hintStyle: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16.0),
-                  //giá cao nhất
-                  TextField(
-                    inputFormatters: [_maxPirceFormatter],
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                      // màu nền
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                      hintText: 'Giá cao nhất',
-                      // hiển thị hint text
-                      hintStyle: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  TimeRange(
-                    alwaysUse24HourFormat: true,
-                    fromTitle: const Text(
-                      'Thời gian bán từ',
-                      style: TextStyle(fontSize: 18, color: Colors.red),
-                    ),
-                    toTitle: const Text(
-                      'Đến',
-                      style: TextStyle(fontSize: 18, color: Colors.red),
-                    ),
-                    titlePadding: 20,
-                    textStyle: const TextStyle(
-                        fontWeight: FontWeight.normal, color: Colors.black87),
-                    activeTextStyle: const TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.white),
-                    borderColor: Colors.red,
-                    backgroundColor: Colors.transparent,
-                    activeBackgroundColor: Colors.orange,
-                    firstTime: const TimeOfDay(hour: 00, minute: 00),
-                    lastTime: const TimeOfDay(hour: 23, minute: 59),
-                    timeStep: 10,
-                    timeBlock: 30,
-                    onRangeCompleted: (range) =>
-                        setState(() => rangeTime = range),
-                  ),
-                  const SizedBox(height: 16.0),
-
-                  //chọn danh mục
-                  MultiSelectBottomSheetField<dynamic>(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
+                //phone
+                TextField(
+                  controller: _phoneController,
+                  maxLength: _phoneLength,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    // màu nền
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
                     ),
-                    key: _multiSelectKey,
-                    initialChildSize: 0.7,
-                    maxChildSize: 0.95,
-                    title: const Text("Danh mục"),
-                    buttonText: Text("Chọn danh mục cho địa điểm",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[400],
-                        )),
-                    items: _items,
-                    searchable: true,
-                    validator: (values) {
-                      if (values == null || values.isEmpty) {
-                        return "Vui lòng chọn 1 danh mục";
-                      }
+                    hintText: 'Nhập số điện thoại',
+                    // hiển thị hint text
+                    hintStyle: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                ),
 
-                      return null;
-                    },
-                    onConfirm: (values) {
+                //giá thấp nhất
+                TextField(
+                  inputFormatters: <TextInputFormatter>[_minPriceFormatter],
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    // màu nền
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Giá thấp nhất',
+                    // hiển thị hint text
+                    hintStyle: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16.0),
+                //giá cao nhất
+                TextField(
+                  inputFormatters: [_maxPriceFormatter],
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    // màu nền
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Giá cao nhất',
+                    // hiển thị hint text
+                    hintStyle: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                TimeRange(
+                  alwaysUse24HourFormat: true,
+                  fromTitle: const Text(
+                    'Thời gian bán từ',
+                    style: TextStyle(fontSize: 18, color: Colors.red),
+                  ),
+                  toTitle: const Text(
+                    'Đến',
+                    style: TextStyle(fontSize: 18, color: Colors.red),
+                  ),
+                  titlePadding: 20,
+                  textStyle: const TextStyle(
+                      fontWeight: FontWeight.normal, color: Colors.black87),
+                  activeTextStyle: const TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white),
+                  borderColor: Colors.red,
+                  backgroundColor: Colors.transparent,
+                  activeBackgroundColor: Colors.orange,
+                  firstTime: const TimeOfDay(hour: 00, minute: 00),
+                  lastTime: const TimeOfDay(hour: 23, minute: 59),
+                  timeStep: 10,
+                  timeBlock: 30,
+                  onRangeCompleted: (range) =>
+                      setState(() => rangeTime = range),
+                ),
+                const SizedBox(height: 16.0),
+
+                //chọn danh mục
+                MultiSelectBottomSheetField<dynamic>(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  key: _multiSelectKey,
+                  initialChildSize: 0.7,
+                  maxChildSize: 0.95,
+                  title: const Text("Danh mục"),
+                  buttonText: Text("Chọn danh mục cho địa điểm",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[400],
+                      )),
+                  items: _items,
+                  searchable: true,
+                  validator: (values) {
+                    if (values == null || values.isEmpty) {
+                      return "Vui lòng chọn 1 danh mục";
+                    }
+                    return null;
+                  },
+                  onConfirm: (values) {
+                    setState(() {
+                      _selectedCategory = values;
+                    });
+                    _multiSelectKey.currentState?.validate();
+                  },
+                  chipDisplay: MultiSelectChipDisplay(
+                    icon: const Icon(
+                      Icons.close_outlined,
+                      color: Colors.red,
+                      size: 10.0,
+                      semanticLabel:
+                          'Text to announce in accessibility modes',
+                    ),
+                    onTap: (item) {
                       setState(() {
-                        _selectedCategory = values;
+                        _selectedCategory.remove(item);
                       });
                       _multiSelectKey.currentState?.validate();
                     },
-                    chipDisplay: MultiSelectChipDisplay(
-                      icon: const Icon(
-                        Icons.close_outlined,
-                        color: Colors.red,
-                        size: 10.0,
-                        semanticLabel:
-                            'Text to announce in accessibility modes',
-                      ),
-                      onTap: (item) {
-                        setState(() {
-                          _selectedCategory.remove(item);
-                        });
-                        _multiSelectKey.currentState?.validate();
-                      },
-                    ),
                   ),
-                  const SizedBox(height: 16.0),
-                  //button submit
-                  SizedBox(
-                    width: 120,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () => {_submitForm(context)},
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all<Color>(
-                            Shared.primaryColor), // màu nền của button
-                      ),
-                      child: const Text(
-                        'Tạo địa điểm',
-                        style: TextStyle(
-                          color: Colors.white, // sử dụng màu
-                        ),
+                ),
+                const SizedBox(height: 16.0),
+                //button submit
+                SizedBox(
+                  width: 120,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () => {_submitForm(context)},
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                          Shared.primaryColor), // màu nền của button
+                    ),
+                    child: const Text(
+                      'Tạo địa điểm',
+                      style: TextStyle(
+                        color: Colors.white, // sử dụng màu
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16.0),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16.0),
+              ],
             ),
           ),
         ],

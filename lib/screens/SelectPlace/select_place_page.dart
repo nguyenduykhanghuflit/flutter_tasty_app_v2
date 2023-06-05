@@ -46,7 +46,7 @@ class MySelectPage extends State<SelectPlace> {
                 ),
                 InkWell(
                   onTap: () {
-                    Get.to(const CreatePlace());
+                    _handleCreatePlace();
                   },
                   child: Container(
                     margin: EdgeInsets.only(top: 10, right: 10),
@@ -177,13 +177,13 @@ class MySelectPage extends State<SelectPlace> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 15),
+                    const   SizedBox(height: 15),
                     SizedBox(
                         width: 200,
                         child: Text("${data["fullAddress"]}",
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style:const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.normal,
                               color: Colors.black, // màu chữ của hint text
@@ -199,7 +199,7 @@ class MySelectPage extends State<SelectPlace> {
   }
 
   Widget cardPlaceSkeleton() {
-    return Container(
+    return  Container(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -265,6 +265,13 @@ class MySelectPage extends State<SelectPlace> {
     }
   }
 
+  void _handleCreatePlace () async{
+
+    Map<String, dynamic>? result = await Get.to(const CreatePlace());
+    if (result != null) {
+      fetchData('');
+    }
+  }
   @override
   void initState() {
     super.initState();
@@ -274,6 +281,7 @@ class MySelectPage extends State<SelectPlace> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        debugShowCheckedModeBanner: false,
         navigatorKey: Get.nestedKey(1),
         home: Scaffold(
             appBar: selectPlaceAppBar(context),

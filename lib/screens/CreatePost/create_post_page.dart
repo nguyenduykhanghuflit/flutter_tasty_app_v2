@@ -35,6 +35,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
   final GlobalController globalController = Get.find();
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
+  final FocusNode _focusContent = FocusNode();
   double _rating = 0;
   final ImagePicker imgPicker = ImagePicker();
   List<XFile> imageFiles = [];
@@ -49,6 +50,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
   void initState() {
     super.initState();
     handleNavigate();
+    _focusContent.unfocus();
   }
 
   @override
@@ -183,15 +185,39 @@ class _CreatePostPageState extends State<CreatePostPage> {
           ),
           const SizedBox(height: 16),
           //form data
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  //title
-                  TextField(
-                    controller: _titleController,
-                    decoration: InputDecoration(
+          SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                //title
+                TextField(
+                  controller: _titleController,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    // màu nền
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      // bo tròn đường viền
+                      borderSide: BorderSide.none, // không có đường viền
+                    ),
+                    hintText: 'Cho review của bạn 1 tiêu đề',
+                    // hiển thị hint text
+                    hintStyle: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold,
+                      color: Colors.grey[400], // màu chữ của hint text
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+
+                //content
+                TextField(
+                  controller: _contentController,
+                  focusNode: _focusContent,
+                  maxLines: 10,
+                  maxLength: 200000,
+                  decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.grey[200],
                       // màu nền
@@ -200,111 +226,89 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         // bo tròn đường viền
                         borderSide: BorderSide.none, // không có đường viền
                       ),
-                      hintText: 'Cho review của bạn 1 tiêu đề',
+                      hintText: 'Nhập nội dung cho bài review',
                       // hiển thị hint text
                       hintStyle: TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold,
                         color: Colors.grey[400], // màu chữ của hint text
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
+                      )),
+                ),
+                const SizedBox(height: 16.0),
 
-                  //content
-                  TextField(
-                    controller: _contentController,
-                    maxLines: 10,
-                    maxLength: 200000,
-                    decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.grey[200],
-                        // màu nền
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          // bo tròn đường viền
-                          borderSide: BorderSide.none, // không có đường viền
-                        ),
-                        hintText: 'Nhập nội dung cho bài review',
-                        // hiển thị hint text
-                        hintStyle: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold,
-                          color: Colors.grey[400], // màu chữ của hint text
-                        )),
-                  ),
-                  const SizedBox(height: 16.0),
-
-                  //select place
-                  Obx(
-                    () => Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text("Địa điểm",
-                            style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold,
-                              color: Colors.black, // màu chữ của hint text
-                            )),
-                        // ignore: invalid_use_of_protected_member
-                        (globalController.placeSelected.value == null ||
-                                globalController.placeSelected.value.isEmpty)
-                            ? Component.buttonSelectPlace
-                            : Component.placeSelected()
-                      ],
-                    ),
-                  ),
-                  //rate
-                  Row(
+                //select place
+                Obx(
+                  () => Column(
                     mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("Đánh giá",
+                      const Text("Địa điểm",
                           style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold,
                             color: Colors.black, // màu chữ của hint text
                           )),
-                      RatingBar.builder(
-                        initialRating: _rating,
-                        minRating: 0,
-                        direction: Axis.horizontal,
-                        allowHalfRating: false,
-                        itemCount: 5,
-                        itemPadding:
-                            const EdgeInsets.symmetric(horizontal: 4.0),
-                        itemBuilder: (context, _) => const Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                        ),
-                        onRatingUpdate: (rating) {
-                          setState(() {
-                            _rating = rating;
-                          });
-                        },
-                      ),
+                      // ignore: invalid_use_of_protected_member
+                      (globalController.placeSelected.value == null ||
+                              globalController.placeSelected.value.isEmpty)
+                          ? Component.buttonSelectPlace
+                          : Component.placeSelected()
                     ],
                   ),
-
-                  const SizedBox(height: 16.0),
-
-                  //button submit
-                  SizedBox(
-                    width: 120,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () => {_submitForm(context)},
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all<Color>(
-                            Shared.primaryColor), // màu nền của button
-                      ),
-                      child: const Text(
-                        'Đăng bài',
+                ),
+                //rate
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const Text("Đánh giá",
                         style: TextStyle(
-                          color: Colors.white, // sử dụng màu
-                        ),
+                          fontSize: 16, fontWeight: FontWeight.bold,
+                          color: Colors.black, // màu chữ của hint text
+                        )),
+                    RatingBar.builder(
+                      initialRating: _rating,
+                      minRating: 0,
+                      direction: Axis.horizontal,
+                      allowHalfRating: false,
+                      itemCount: 5,
+                      itemPadding:
+                          const EdgeInsets.symmetric(horizontal: 4.0),
+                      itemBuilder: (context, _) => const Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                      ),
+                      onRatingUpdate: (rating) {
+                        setState(() {
+                          _rating = rating;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16.0),
+
+                //button submit
+                SizedBox(
+                  width: 120,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () => {
+                      _focusContent.unfocus(),
+                      _submitForm(context)
+                    },
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                          Shared.primaryColor), // màu nền của button
+                    ),
+                    child: const Text(
+                      'Đăng bài',
+                      style: TextStyle(
+                        color: Colors.white, // sử dụng màu
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16.0),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16.0),
+              ],
             ),
           ),
         ],

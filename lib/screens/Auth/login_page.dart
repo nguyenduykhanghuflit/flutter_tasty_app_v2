@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -15,46 +14,44 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-
-  final usController=TextEditingController();
-  final pwController=TextEditingController();
+  final usController = TextEditingController();
+  final pwController = TextEditingController();
 
   bool _obscureText = true;
-  void handleLogin(){
-  String us=usController.text;
-  String pw=pwController.text;
+  void handleLogin() {
+    String us = usController.text;
+    String pw = pwController.text;
 
-  if(us.isEmpty || pw.isEmpty){
-    Get.defaultDialog(
-      title: "Thông báo",
-      middleText: "Vui lòng nhập tên đăng nhập và mật khẩu",
-      backgroundColor: Colors.grey.withOpacity(0.8),
-      titleStyle: TextStyle(color: Colors.white),
-      middleTextStyle: TextStyle(color: Colors.white),
-    );
+    if (us.isEmpty || pw.isEmpty) {
+      Get.defaultDialog(
+        title: "Thông báo",
+        middleText: "Vui lòng nhập tên đăng nhập và mật khẩu",
+        backgroundColor: Colors.grey.withOpacity(0.8),
+        titleStyle: const TextStyle(color: Colors.white),
+        middleTextStyle: const TextStyle(color: Colors.white),
+      );
+    } else {
+      ApiServices().login(us, pw);
+    }
   }
-  else{
-    ApiServices().login(us, pw);
-  }
-
-  }
-
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      body: SafeArea(
+        body: SafeArea(
+      child: Container(
+        color: Colors.white,
         child: CustomScrollView(
           slivers: [
             SliverFillRemaining(
-              hasScrollBody: false,
-                child:Padding(
+                hasScrollBody: false,
+                child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
                   ),
                   child: Column(
                     children: [
+                      const SizedBox(height: 80),
                       Image.asset('assets/img/logo2.png'),
                       TextField(
                         controller: usController,
@@ -78,16 +75,15 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 16.0),
                       TextField(
                         keyboardType: TextInputType.visiblePassword,
-                          obscureText:_obscureText,
-
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(8)
-                        ],
+                        obscureText: _obscureText,
+                        inputFormatters: [LengthLimitingTextInputFormatter(8)],
                         controller: pwController,
                         decoration: InputDecoration(
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscureText ? Icons.visibility : Icons.visibility_off,
+                              _obscureText
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
                               color: Colors.grey,
                             ),
                             onPressed: () {
@@ -117,9 +113,7 @@ class _LoginPageState extends State<LoginPage> {
                         width: 400,
                         height: 60,
                         child: ElevatedButton(
-                          onPressed: () => {
-                            handleLogin()
-                          },
+                          onPressed: () => {handleLogin()},
                           style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all<Color>(
                                 Shared.primaryColor), // màu nền của button
@@ -129,40 +123,40 @@ class _LoginPageState extends State<LoginPage> {
                             style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 17// sử dụng màu
-                            ),
+                                fontSize: 17 // sử dụng màu
+                                ),
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 20.0),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text("Chưa có tài khoản ?",style:TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold,
-                            color: Colors.grey[400],
-                          )),
+                          Text("Chưa có tài khoản ?",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[400],
+                              )),
                           GestureDetector(
                             onTap: () {
-                              Get.to(RegisterPage());
+                              Get.to(const RegisterPage());
                             },
-                            child: Text("Đăng ký",style:TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold,
-                              color: Shared.primaryColor,
-                            )),
+                            child: const Text("Đăng ký",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Shared.primaryColor,
+                                )),
                           )
-
                         ],
                       ),
                     ],
                   ),
-                )
-            )
+                ))
           ],
-
         ),
-      )
-    );
+      ),
+    ));
   }
 }

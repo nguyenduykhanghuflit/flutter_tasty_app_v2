@@ -51,15 +51,14 @@ class ListPost extends StatelessWidget {
                           child: Row(
                             children: [
                               CircleAvatar(
-                                // Thay đổi hình ảnh đại diện của người dùng
-                                child:Image.network(
-                                  posts[index]["avatar"],
-                                  fit: BoxFit.cover,
-                                ),
+                                backgroundImage:
+                                NetworkImage(posts[index]["avatar"]),
+                                backgroundColor: Colors.white, // Thêm màu nền trắng để đường viền hiển thị rõ
+                                radius: 20, // Thay đổi độ lớn của CircleAvatar
                               ),
                               const SizedBox(width: 8.0),
                               SizedBox(
-                                width:120,
+                                width:100,
                                 child: Text(
                                   posts[index]["fullName"],
                                   style: TextStyle(

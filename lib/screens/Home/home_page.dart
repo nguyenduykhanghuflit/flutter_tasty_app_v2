@@ -17,6 +17,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return  const MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Home page',
       home: MyHomePage(),
     );
@@ -85,6 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
+
       length: tabs.length, // This is the number of tabs.
       child: Scaffold(
         appBar: homeAppBar(context),
@@ -174,7 +176,7 @@ class _MyHomePageState extends State<MyHomePage> {
                Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      Get.to(SearchPost());
+                      Get.to(const SearchPost());
                     },
                     child:const TextField(
                       enabled:false,

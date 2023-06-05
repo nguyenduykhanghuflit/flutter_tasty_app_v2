@@ -62,6 +62,7 @@ class SearchPostState extends State<SearchPost> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
         home: Scaffold(
             appBar: searchPostAppbar(context),
             body: Container(
@@ -104,7 +105,7 @@ class SearchPostState extends State<SearchPost> {
             },
           ),
           Container(
-            width: 320,
+            width: 270,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10.0),
               color: Colors.grey[200],
