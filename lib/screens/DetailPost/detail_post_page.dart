@@ -309,8 +309,8 @@ class _DetailPostState extends State<DetailPost> {
                       ),
                       child: CircleAvatar(
                         backgroundImage: NetworkImage(post["UserPost"]["avatar"]),
-                        backgroundColor: Colors.white, // Thêm màu nền trắng để đường viền hiển thị rõ
-                        radius: 25.0, // Thay đổi độ lớn của CircleAvatar
+                        backgroundColor: Colors.white, 
+                        radius: 25.0, 
                       ),
                     ),
                     const SizedBox(width: 8.0),
