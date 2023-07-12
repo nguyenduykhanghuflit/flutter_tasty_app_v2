@@ -1,5 +1,5 @@
 # Tasty App
-<img src="https://github.com/nguyenduykhanghuflit/flutter_tasty_app_v2/assets/76279360/ade4a519-9d43-41ea-bb9c-ac3ba40db562" width="300" height="700">
+
 <img src="https://github.com/nguyenduykhanghuflit/flutter_tasty_app_v2/assets/76279360/ade4a519-9d43-41ea-bb9c-ac3ba40db562" width="300" height="700">
 <img src="https://github.com/nguyenduykhanghuflit/flutter_tasty_app_v2/assets/76279360/d1676601-5f8e-43b5-be88-fa0205060159" width="300" height="700">
 <img src="https://github.com/nguyenduykhanghuflit/flutter_tasty_app_v2/assets/76279360/5d80dfe8-e66f-4f33-9dbf-474053da0488" width="300" height="700">
