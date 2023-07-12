@@ -1,6 +1,6 @@
 # Tasty App
-
-![image](https://github.com/nguyenduykhanghuflit/flutter_tasty_app_v2/assets/76279360/ade4a519-9d43-41ea-bb9c-ac3ba40db562 =250x250)
+<img src="https://github.com/nguyenduykhanghuflit/flutter_tasty_app_v2/assets/76279360/ade4a519-9d43-41ea-bb9c-ac3ba40db562" width="200" height="500">
+![image](https://github.com/nguyenduykhanghuflit/flutter_tasty_app_v2/assets/76279360/ade4a519-9d43-41ea-bb9c-ac3ba40db562)
 ![image](https://github.com/nguyenduykhanghuflit/flutter_tasty_app_v2/assets/76279360/d1676601-5f8e-43b5-be88-fa0205060159)
 ![image](https://github.com/nguyenduykhanghuflit/flutter_tasty_app_v2/assets/76279360/5d80dfe8-e66f-4f33-9dbf-474053da0488)
 ![image](https://github.com/nguyenduykhanghuflit/flutter_tasty_app_v2/assets/76279360/20274df0-cf98-496e-9a26-bb3bba017064)
